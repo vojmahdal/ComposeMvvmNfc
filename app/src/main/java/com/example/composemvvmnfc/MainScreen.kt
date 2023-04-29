@@ -1,8 +1,7 @@
 package com.example.composemvvmnfc
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 
@@ -19,10 +18,13 @@ fun MainScreen(
     text: String,
     isLoading: Boolean,
     switchChange: () -> Unit,
-    textSave: (String) -> Unit
+    textSave: (String) -> Unit,
+    operationSave: (String) -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize()
+    ) {
         var textState by remember {
             mutableStateOf("")
         }
@@ -30,19 +32,22 @@ fun MainScreen(
             textState = mtext
         }
 
+        var operationState by remember {
+            mutableStateOf("")
+        }
+        val onOperationChange = { mtext: String ->
+            operationState = mtext
+        }
 
         Switch(
             checked = isLoading,
             onCheckedChange = { switchChange() }
         )
-        Text(text ="Read/Write")
+        Text(text = "Read/Write")
 
 
-        val openDialog = remember { mutableStateOf(false)  }
         WriteText(
             text = textState,
-            isLoading = isLoading,
-            switchChange = switchChange,
             onTextChange = onTextChange
         )
         Text(
@@ -50,11 +55,76 @@ fun MainScreen(
             modifier = Modifier.padding(20.dp),
             style = MaterialTheme.typography.h3
         )
+
         Button(
-            onClick = { textSave(textState) }
+            onClick = {
+                operationSave(operationState)
+                textSave(textState)
+            }
         ) {
             Text("Write!")
         }
+        Operation(selectedOption = operationState, onOptionSelected = onOperationChange)
+    }
+}
 
+@Composable
+fun Operation(
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit
+) {
+    val radioWrite = listOf("text", "url", "phone", "email")
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        radioWrite.forEach { text ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = (text == selectedOption),
+                        onClick = {
+                            onOptionSelected(text)
+                        }
+                    )
+                    .padding(horizontal = 16.dp)
+            ) {
+                RadioButton(
+                    selected = (selectedOption == text),
+                    onClick = {
+                        onOptionSelected(text)
+                    }
+                )
+                Text(
+                    text = text,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+            }
+
+        }
+    }
+}
+
+@Composable
+fun WriteText(
+    text: String,
+    onTextChange: (String) -> Unit,
+
+    ) {
+    Row(
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
+    {
+        TextField(
+            value = text,
+            onValueChange = { onTextChange(it) },
+            label = { Text("Enter text") },
+            placeholder = { Text(text = "text") },
+        )
     }
 }
